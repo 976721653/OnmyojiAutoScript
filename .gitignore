@@ -43,12 +43,18 @@ oas-backend.bat
 .eslintrc.js
 .prettierrc.js
 # ai
-AGENTS.md
 CLAUDE.md
-.codex/
 .claude/
-openspec/
+.codex/
+.windsurf
+.trae
 
+
+# .agents - reference projects and resources (entities only, INDEX.md tracked)
+.agents/reference-projects/*
+!.agents/reference-projects/INDEX.md
+.agents/resource/*
+!.agents/resource/INDEX.md
 
 # Created by .ignore support plugin (hsz.mobi)
 
