@@ -121,17 +121,21 @@ class Agent:
                 max_variance = variance
         return Focus(inputs=tracks[max_index])
 
-    def decision(self, tracks: list[tuple], state: list, freeze: bool = False) -> list:
+    def decision(self, tracks: list[tuple], state: list, freeze: bool = False, debug_info: bool = False) -> list:
         not_decision = [-1, -1, False, -1]
         if not tracks:
+            if debug_info:
+                logger.info('[Decision] no tracks detected')
             return not_decision
         # Cache the time interval for scattering beans
         new_time = datetime.now()
         delta_time = 1000 * (new_time - self.last_throw_time).total_seconds()  # ms
         self.check_observe(tracks=tracks)
         if self.focus is None:
+            if debug_info:
+                logger.info('[Decision] focus=None, no throw')
             return not_decision
-        result = self.focus.decision(tracks=tracks, strategy=self.strategy, state=[delta_time] + state, freeze=freeze)
+        result = self.focus.decision(tracks=tracks, strategy=self.strategy, state=[delta_time] + state, freeze=freeze, debug_info=debug_info)
         if result[2]:
             self.last_throw_time = new_time
             self.dbg_throw += 1

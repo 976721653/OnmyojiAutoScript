@@ -251,20 +251,22 @@ class ScriptTask(GameUi, HyaSlave, SwitchOnmyoji):
                 continue
             if not init_bean_flag:
                 init_bean_flag = True
-                self.bean_05to10()
-                time.sleep(0.5)
+                self._switch_bean_with_verify()
             #修改：在这里不再区分freeze，而是将状态传到decision用于执行冻结策略
             #目前被禁用了 因为冰冻状态下检测正确率约等于0 全是蝉冰雪女 =.=
-            if not self.appear(self.I_HFREEZE):
+            freeze = self._detect_freeze_stable()
+            if self._config.debug_config.hya_info:
+                logger.info(f'[Frame] FREEZE={freeze}')
+            if not freeze:
                 # -------------------------------------------------------
-                freeze = self.appear(self.I_HFREEZE)
                 self.slave_state = self.update_state()
                 tracks = self.tracker(image=self.device.image, response=last_action)
-                last_action = self.agent.decision(tracks=tracks, state=self.slave_state, freeze=freeze)
+                last_action = self.agent.decision(tracks=tracks, state=self.slave_state, freeze=freeze, debug_info=self._config.debug_config.hya_info)
                 self.do_action(last_action, state=self.slave_state)
             else:
-                # TODO freeze state
                 tracks = []
+                if self._config.debug_config.hya_info:
+                    logger.info('[Frame] FREEZE=True, skipping tracking')
 
             # debug
             if self._config.debug_config.hya_show:
@@ -276,6 +278,11 @@ class ScriptTask(GameUi, HyaSlave, SwitchOnmyoji):
                 self.debugger.show_info(tracker=self.tracker, f=self.agent.focus)
 
         logger.info('Hyakkiyakou End')
+        if self._config.debug_config.hya_info:
+            total = self.agent.dbg_throw + self.agent.dbg_throw_n
+            rate = (100 * self.agent.dbg_throw / total) if total > 0 else 0
+            logger.info(f'[Stats] throws={self.agent.dbg_throw} skips={self.agent.dbg_throw_n} '
+                        f'total={total} rate={rate:.1f}%')
         if self._config.debug_config.hya_show:
             self.debugger.show_stop()
         if self._config.debug_config.hya_save_result:
@@ -290,11 +297,50 @@ class ScriptTask(GameUi, HyaSlave, SwitchOnmyoji):
 
     def do_action(self, action: list, state):
         x, y, throw, bean = action
+        if self._config.debug_config.hya_info:
+            logger.info(f'[Action] throw={throw} bean={bean} state_beans={state[0]} x={x} y={y}')
         if not throw:
             return
         if state[0] <= 0:
+            if self._config.debug_config.hya_info:
+                logger.info('[Action] skipped: no beans remaining')
             return
         self.fast_click(x=x, y=y, control_method=self._config.debug_config.hya_control_method)
+
+    def _detect_freeze_stable(self) -> bool:
+        """三帧连续确认冻结状态，防止 I_HFREEZE 误匹配导致整局零抛豆"""
+        if not self.appear(self.I_HFREEZE):
+            return False
+        # 第一次检测到，等两帧再确认
+        time.sleep(0.15)
+        self.fast_screenshot(screenshot=self._config.debug_config.hya_screenshot_method)
+        if not self.appear(self.I_HFREEZE):
+            return False
+        time.sleep(0.15)
+        self.fast_screenshot(screenshot=self._config.debug_config.hya_screenshot_method)
+        return self.appear(self.I_HFREEZE)
+
+    def _switch_bean_with_verify(self):
+        """切换 5 豆 → 10 豆，验证结果并重试"""
+        debug_info = self._config.debug_config.hya_info
+        self.bean_05to10()
+        time.sleep(0.5)
+        self.fast_screenshot(screenshot=self._config.debug_config.hya_screenshot_method)
+        if self.recognize_bean_10():
+            if debug_info:
+                logger.info('[Bean] switched to 10 beans OK')
+            return
+        # 重试
+        if debug_info:
+            logger.info('[Bean] first switch failed, retrying')
+        self.bean_05to10()
+        time.sleep(0.5)
+        self.fast_screenshot(screenshot=self._config.debug_config.hya_screenshot_method)
+        if self.recognize_bean_10():
+            if debug_info:
+                logger.info('[Bean] retry OK')
+            return
+        logger.warning('[Bean] WARNING: failed to switch to 10 beans after retry')
 
 
 if __name__ == '__main__':

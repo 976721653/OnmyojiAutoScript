@@ -4,4 +4,4 @@
 
 | 文档 | 状态 | 更新 | 摘要 |
 |------|------|------|------|
-| [project-architecture.md](project-architecture.md) | 草稿 | 2026-05-14 | OAS 整体架构：module 核心框架层与 tasks 任务层的分离设计，Config-Device-Task 核心链路，组件系统和页面导航机制 |
+| [project-architecture.md](project-architecture.md) | 草稿 | 2026-05-14 | OAS 完整架构参考文档，覆盖 Config、Device、调度执行、Tasks、页面导航、Atom/OCR、GUI/Server、通知与多人协作、异常与日志等全部 10 个核心子系统 |

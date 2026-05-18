@@ -70,10 +70,10 @@ velocity: {self._v}"""
         self._h = focus._h
         self._v = focus._v
 
-    def decision(self, tracks, strategy, state, freeze: bool = False) -> list:
+    def decision(self, tracks, strategy, state, freeze: bool = False, debug_info: bool = False) -> list:
 
         buff_states = state[4:] if len(state) > 4 else []  # get buff status：state[4:] = buff_0 ~ buff_3，对应 HyaBuff
-        has_prob_up = any(b == HyaBuff.BUFF_STATE6 for b in buff_states) # 是否存在“概率UP”buff（HyaBuff.BUFF_STATE6）
+        has_prob_up = any(b == HyaBuff.BUFF_STATE6 for b in buff_states) # 是否存在”概率UP”buff（HyaBuff.BUFF_STATE6）
         buff_omega, buff_cx, buff_cy, buff_v, buff_class = self.omega_buff(tracks, strategy['invite_friend'], has_prob_up)
         if self._omega > buff_omega:
             buffed = False
@@ -86,13 +86,13 @@ velocity: {self._v}"""
             target_y = buff_cy - 40  # top left corner
             target_class = buff_class # new : for class
 
-        # ========= 新增：利用和 gamma() 一样的区间判断当前“打的对象”是不是 SSR/SP =========
+        # ========= 新增：利用和 gamma() 一样的区间判断当前”打的对象”是不是 SSR/SP =========
         is_rare_ssr_sp = False
         if CI.MIN_SSR <= target_class <= CI.MAX_SSR and self._omega > buff_omega:
             is_rare_ssr_sp = True
         elif CI.MIN_SP <= target_class <= CI.MAX_SP and self._omega > buff_omega:
             is_rare_ssr_sp = True
-        _r = self.r(vector=state, omega=self._omega, omega_buff=self._omega_buff, is_rare_ssr_sp=is_rare_ssr_sp, freeze=freeze, is_buff=buffed)
+        _r = self.r(vector=state, omega=self._omega, omega_buff=self._omega_buff, is_rare_ssr_sp=is_rare_ssr_sp, freeze=freeze, is_buff=buffed, debug_info=debug_info)
         throw = True if _r > 0 else False
         # x, y, throw, number
         return [target_x, target_y, throw, 10]
@@ -125,22 +125,24 @@ velocity: {self._v}"""
         return max_omega, max_cx, max_cy, max_v, max_class
             
     @classmethod
-    def r(cls, vector: list, omega: float, omega_buff: float, is_rare_ssr_sp: bool, freeze: bool = False, is_buff: bool = False) -> float:
+    def r(cls, vector: list, omega: float, omega_buff: float, is_rare_ssr_sp: bool, freeze: bool = False, is_buff: bool = False, debug_info: bool = False) -> float:
         _omega = max(omega, omega_buff)
         tau = - 140 / (max(101, vector[0]) - 100) # 时间冷却项：避免过密投豆
         upsilon = (vector[1] / 250 - vector[2] / 35) # 豆子数量 vs 进度：豆多进度低 -> 倾向多砸；豆少进度高 -> 惩罚多砸
         upsilon = 100 * (upsilon**2 if upsilon > 0 else - upsilon**2)
         result = _omega + tau + upsilon - 0.6
-        # print(f"total: {result:.4f} | {_omega:.4f} | {tau:.4f} | {upsilon:.4f}")
-       
+
         buff_states = vector[4:] if len(vector) > 4 else []  # get buff status：vector[4:] = buff_0 ~ buff_3，对应 HyaBuff
-        has_prob_up = any(b == HyaBuff.BUFF_STATE6 for b in buff_states) # 是否存在“概率UP”buff（HyaBuff.BUFF_STATE6）
+        has_prob_up = any(b == HyaBuff.BUFF_STATE6 for b in buff_states) # 是否存在”概率UP”buff（HyaBuff.BUFF_STATE6）
 
         # punishment：
         #    no throwing when ssr/sp with no enhanced probability
         if is_rare_ssr_sp and not has_prob_up:
+            if debug_info:
+                logger.info(f'[Decision] SSR/SP blocked: no prob_up buff | '
+                            f'omega={_omega:.4f} tau={tau:.4f} upsilon={upsilon:.4f}')
             result = -999.0 # stop throwing nonsense
-        
+
         # punishment:
         #   only throw ssr/sp with enhanced probability or buff when freezed
         if freeze:
@@ -148,7 +150,18 @@ velocity: {self._v}"""
             #     result = -999.0 # stop throwing nonsense
             # if is_buff:
             #     result = 5.0
+            if debug_info:
+                logger.info(f'[Decision] blocked: freeze state | '
+                            f'omega={_omega:.4f} tau={tau:.4f} upsilon={upsilon:.4f}')
             result = -999.0
-            
+
+        if debug_info and result <= 0 and result > -999.0:
+            logger.info(f'[Decision] skipped: r={result:.4f} <= 0 | '
+                        f'omega={_omega:.4f} tau={tau:.4f} upsilon={upsilon:.4f} '
+                        f'freeze={freeze} rare_ssr_sp={is_rare_ssr_sp} prob_up={has_prob_up}')
+        elif debug_info and result > 0:
+            logger.info(f'[Decision] throw: r={result:.4f} | '
+                        f'omega={_omega:.4f} tau={tau:.4f} upsilon={upsilon:.4f}')
+
         return result
 
