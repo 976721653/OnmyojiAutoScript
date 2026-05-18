@@ -48,6 +48,7 @@ CLAUDE.md
 .codex/
 .windsurf
 .trae
+skills-lock.json
 
 
 # .agents - reference projects and resources (entities only, INDEX.md tracked)
