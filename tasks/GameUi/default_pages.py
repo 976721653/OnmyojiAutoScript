@@ -34,7 +34,7 @@ def random_click(
     Args:
         low: 当需要返回点击序列时，序列长度的最小值。
         high: 当需要返回点击序列时，序列长度的最大值。
-        ltrb: 允许参与随机的区域开关，依次对应左、偏左、偏右、右区域。
+        ltrb: 允许参与随机的区域开关，依次对应左、上、右、下区域。
 
     Returns:
         单个 `RuleClick`，或一个由多个 `RuleClick` 组成的列表。
@@ -290,6 +290,7 @@ page_battle_result.add_enter_success_hooks(lambda _task: random_click())
 page_reward = Page(
     any_of(
         GeneralBattleAssets.I_REWARD,
+        GeneralBattleAssets.I_REWARD_STATISTICS,
         GeneralBattleAssets.I_REWARD_GOLD,
         GeneralBattleAssets.I_REWARD_EXP_SOUL_4,
         GeneralBattleAssets.I_REWARD_GOLD_SNAKE_SKIN,
