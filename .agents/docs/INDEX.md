@@ -7,7 +7,7 @@ docs 是 Agent 协同开发的主要知识存储空间。文档按类型分入�
 | [knowledge/](knowledge/INDEX.md) | 知识库 | 项目架构、模块设计、技术原理等通用知识 | [→ INDEX](knowledge/INDEX.md) |
 | [dev-logs/](dev-logs/INDEX.md) | 开发日志 | 开发过程的记录、决策上下文 | [→ INDEX](dev-logs/INDEX.md) |
 | [pitfalls/](pitfalls/INDEX.md) | 常见场景 | 踩坑记录、已知问题、注意事项 | [→ INDEX](pitfalls/INDEX.md) |
-| [rules/](rules/INDEX.md) | 规范 | 编码规范、命名约定、必须遵守的规则 | [→ INDEX](rules/INDEX.md) |
+| [rules/](rules/INDEX.md) | 规范 | 编码规范、命名约定、必须遵守的规则和操作流程 | [→ INDEX](rules/INDEX.md) |
 
 ## 文档元信息规范
 

@@ -210,7 +210,7 @@ AGENTS.md → .agents/INDEX.md → .agents/docs/INDEX.md → 具体类目/INDEX.
 | 架构知识库 | `.agents/docs/knowledge/` | 项目架构、模块设计、技术原理 |
 | 开发日志 | `.agents/docs/dev-logs/` | 开发过程、决策上下文 |
 | 踩坑记录 | `.agents/docs/pitfalls/` | 常见问题和注意事项 |
-| 编码规范 | `.agents/docs/rules/` | 命名、导入、任务结构等规范 |
+| 规范文档 | `.agents/docs/rules/` | 命名、导入、任务结构和操作流程等规范 |
 | 参考项目 | `.agents/reference-projects/` | 外部开源项目索引 |
 | 本地资源 | `.agents/resource/` | 本地参考资源索引 |
 
@@ -218,6 +218,7 @@ AGENTS.md → .agents/INDEX.md → .agents/docs/INDEX.md → 具体类目/INDEX.
 
 - `.agents/docs/knowledge/project-architecture.md`
 - `.agents/docs/rules/coding-standards.md`
+- `.agents/docs/rules/sync-upstream-mine-sop.md`
 
 ## 6. OpenSpec 需求沟通流程
 
