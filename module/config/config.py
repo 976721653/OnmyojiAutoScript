@@ -319,6 +319,39 @@ class Config(ConfigState, ConfigManual, ConfigWatcher, ConfigMenu):
         if not start_time:
             start_time = datetime.now().replace(microsecond=0)
 
+        # 每日运行时刻列表模式：当 daily_run_times 非空且任务成功时，自动计算最近未来时刻
+        if success is True and hasattr(scheduler, 'daily_run_times') and scheduler.daily_run_times:
+            float_seconds = (scheduler.float_time.hour * 3600 +
+                             scheduler.float_time.minute * 60 +
+                             scheduler.float_time.second)
+            random_float = random.randint(0, float_seconds)
+
+            offset = timedelta(
+                hours=-scheduler.daily_run_offset.hour,
+                minutes=-scheduler.daily_run_offset.minute,
+                seconds=-scheduler.daily_run_offset.second
+            )
+
+            now = datetime.now()
+            today = now.date()
+            candidates = []
+            for t in scheduler.daily_run_times:
+                for day_offset in [0, 1]:
+                    dt = datetime.combine(today + timedelta(days=day_offset), t) + offset
+                    if dt > now:
+                        candidates.append(dt)
+
+            next_run = min(candidates).replace(microsecond=0) + timedelta(seconds=random_float)
+
+            self.lock_config.acquire()
+            try:
+                scheduler.next_run = next_run
+                self.save()
+            finally:
+                self.lock_config.release()
+            logger.attr(f'{task}.scheduler.next_run', next_run)
+            return
+
         # 依次判断是否有自定义的下次运行时间
         run = []
         if success is not None:

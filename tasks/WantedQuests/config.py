@@ -101,7 +101,7 @@ class CooperationSelectMaskDescription(str, Enum):
 
 
 class WantedQuestsConfig(BaseModel):
-    before_end: Time = Field(default=Time(0, 0, 0), description='before_end_help')
+    before_end: Time = Field(default=Time(0, 0, 0), description='before_end_help')  # 已废弃，请使用 scheduler.daily_run_offset 替代
     invite_friend_name: str = Field(default=str(""), description="invite_friend_name_help")
     cooperation_type: CooperationSelectMaskDescription = Field(default=CooperationSelectMaskDescription.Any,
                                                                description="cooperation_type_help")
