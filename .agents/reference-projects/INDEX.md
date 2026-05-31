@@ -6,7 +6,7 @@
 
 | 名称 | 仓库地址 | 描述 | 用途 |
 |------|----------|------|------|
-| （暂无参考项目） | — | — | — |
+| OASX | https://github.com/AzurTian/OASX.git | OnmyojiAutoScript 前端 UI 项目 | 作为 OAS 后端服务的前端交互与配置映射参考 |
 
 ## 使用说明
 

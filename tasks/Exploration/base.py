@@ -117,8 +117,31 @@ class BaseExploration(GameUi, GeneralBattle, GeneralRoom, GeneralInvite, Replace
             self.exp_50(is_open=False)
             self.exp_100(is_open=False)
             self.close_buff()
-        self.set_next_run(task='Exploration', success=True, finish=False)
+        if self._config.scrolls.scrolls_enable:
+            self.set_scrolls_next_run()
+        else:
+            self.set_next_run(task='Exploration', success=True, finish=False)
         raise TaskEnd
+
+    def set_scrolls_next_run(self):
+        next_run = datetime.now() + self._config.scrolls.scrolls_cd
+        self.set_next_run(task='Exploration', finish=False, server=False, target=next_run)
+
+    def set_scrolls_trigger_next_run(self):
+        now = datetime.now().replace(microsecond=0)
+        next_run = (now + self._config.scrolls.scrolls_cd).replace(microsecond=0)
+        self.config.lock_config.acquire()
+        try:
+            self.config.reload()
+            self.config.model.exploration.scheduler.next_run = next_run
+            self.config.model.realm_raid.scheduler.next_run = now
+            self.config.model.memory_scrolls.scheduler.next_run = now
+            self.config.save()
+        finally:
+            self.config.lock_config.release()
+        logger.attr('exploration.scheduler.next_run', next_run)
+        logger.attr('realm_raid.scheduler.next_run', now)
+        logger.attr('memory_scrolls.scheduler.next_run', now)
 
     # 打开指定的章节：
     def open_expect_level(self):
@@ -293,15 +316,13 @@ class BaseExploration(GameUi, GeneralBattle, GeneralRoom, GeneralInvite, Replace
 
         # 设置下次执行行时间
         logger.info("RealmRaid and Exploration  set_next_run !")
-        next_run = datetime.now() + con_scrolls.scrolls_cd
-        self.set_next_run(task='Exploration', success=False, finish=False, target=next_run)
-        self.set_next_run(task='RealmRaid', success=False, finish=False, server = False, target=datetime.now())
-        self.set_next_run(task='MemoryScrolls', success=False, finish=False, target=datetime.now())
+        self.set_scrolls_trigger_next_run()
         raise TaskEnd
 
     def check_exit(self, current_page: pages.Page | None) -> bool:
         # True 表示要退出这个任务
-        if self.current_count >= self._config.exploration_config.minions_cnt:
+        if not self._config.scrolls.scrolls_enable and \
+                self.current_count >= self._config.exploration_config.minions_cnt:
             logger.info('Minions count is enough, exit')
             return True
         if datetime.now() - self.start_time >= self.limit_time:

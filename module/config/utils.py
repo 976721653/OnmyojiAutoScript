@@ -7,6 +7,7 @@ import yaml
 
 from filelock import FileLock
 from datetime import datetime, timedelta, timezone, time
+from time import sleep
 
 from module.config.atomicwrites import atomic_write
 from module.logger import logger
@@ -85,20 +86,28 @@ def write_file(file: str, data):
     lock = FileLock(f"{file}.lock")
     with lock:
         logger.debug(f'write: {file}')
-        if ext == '.yaml':
-            with atomic_write(file, overwrite=True, encoding='utf-8', newline='') as f:
-                if isinstance(data, list):
-                    yaml.safe_dump_all(data, f, default_flow_style=False, encoding='utf-8', allow_unicode=True,
-                                       sort_keys=False)
+        for retry in range(5):
+            try:
+                if ext == '.yaml':
+                    with atomic_write(file, overwrite=True, encoding='utf-8', newline='') as f:
+                        if isinstance(data, list):
+                            yaml.safe_dump_all(data, f, default_flow_style=False, encoding='utf-8', allow_unicode=True,
+                                               sort_keys=False)
+                        else:
+                            yaml.safe_dump(data, f, default_flow_style=False, encoding='utf-8', allow_unicode=True,
+                                           sort_keys=False)
+                elif ext == '.json':
+                    with atomic_write(file, overwrite=True, encoding='utf-8', newline='') as f:
+                        s = json.dumps(data, indent=2, ensure_ascii=False, sort_keys=False, default=str)
+                        f.write(s)
                 else:
-                    yaml.safe_dump(data, f, default_flow_style=False, encoding='utf-8', allow_unicode=True,
-                                   sort_keys=False)
-        elif ext == '.json':
-            with atomic_write(file, overwrite=True, encoding='utf-8', newline='') as f:
-                s = json.dumps(data, indent=2, ensure_ascii=False, sort_keys=False, default=str)
-                f.write(s)
-        else:
-            logger.warning(f'Unsupported config file extension: {ext}')
+                    logger.warning(f'Unsupported config file extension: {ext}')
+                return
+            except PermissionError:
+                if retry >= 4:
+                    raise
+                logger.warning(f'Permission denied when writing {file}, retry {retry + 1}/5')
+                sleep(0.2 * (retry + 1))
 
 
 def deep_iter(data, depth=0, current_depth=1):
