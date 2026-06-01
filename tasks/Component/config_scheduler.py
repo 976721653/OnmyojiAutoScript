@@ -15,7 +15,7 @@ class Scheduler(ConfigBase):
     server_update: Time = Field(default=Time(hour=9, minute=0, second=0), description='server_update_help')
     delay_date: int = Field(default=1, description='delay_date_help', ge=1, le=31)
     float_time: Time = Field(default=Time(hour=0, minute=0, second=0), description='float_time_help')
-    daily_run_times: list[Time] = Field(default_factory=list, description='daily_run_times_help')
+    daily_run_times: list[Time] = Field(default=[], description='daily_run_times_help')
     daily_run_offset: Time = Field(default=Time(hour=0, minute=0, second=0), description='daily_run_offset_help')
 
 
