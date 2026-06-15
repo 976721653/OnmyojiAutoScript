@@ -46,6 +46,7 @@ oas-backend.bat
 CLAUDE.md
 .claude/
 .codex/
+.reasonix/
 .windsurf
 .trae
 skills-lock.json
